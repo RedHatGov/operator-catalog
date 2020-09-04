@@ -1,0 +1,19 @@
+---
+dist: bionic
+language: python
+services:
+- docker
+install:
+- pip3 install -r requirements.txt
+script:
+# Don't even accidentally build a copy without appending -dev
+- ./operator-index.py build --tag-extension dev
+deploy:
+- provider: script
+  script: ./operator-index.py push --tag-extension dev ---extra-tag develop
+  on:
+    branch: develop
+- provider: script
+  script: ./operator-index.py push --extra-tag latest --build
+  on:
+    branch: release
