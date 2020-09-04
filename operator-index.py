@@ -361,6 +361,7 @@ def push(ctx, verbose, tag_extension, extra_tag, build):
             ctx.invoke(do_build, verbose=verbose,
                        tag_extension=tag_extension,
                        opm_version="latest")
+            built_tag += "-{}".format(tag_extension)
         else:
             raise RuntimeError("Unable to find the appropriate image to push.")
     elif tag_extension and not built_tag.endswith("-{}".format(tag_extension)):
