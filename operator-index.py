@@ -233,6 +233,7 @@ def install_opm(version: str = "latest") -> None:
         logger.debug("Saving to {}".format(config["opm_path"] + "-" + version))
         with open(config["opm_path"] + "-" + version, "wb") as f:
             f.write(r.content)
+        os.chmod(config["opm_path"] + "-" + version, 0o550)
 
         if os.path.islink(config["opm_path"]):
             logger.debug("Removing old symlink")
