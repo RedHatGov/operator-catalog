@@ -11,7 +11,7 @@ script:
 - docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io
 deploy:
 - provider: script
-  script: ./operator-index.py push --tag-extension dev ---extra-tag develop
+  script: ./operator-index.py push --tag-extension dev --extra-tag develop
   on:
     branch: develop
 - provider: script
