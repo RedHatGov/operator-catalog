@@ -9,7 +9,13 @@ This repository exists to serve as the source of truth for the contents of the R
 In short, you don't use this repository. Travis does. If you want to add this catalog index to your OLM-enabled cluster, you could install the catalog source using the following:
 
 ```shell
-curl https://raw.githubusercontent.com/redhatgov/operator-catalog/release/catalog_source.yml | kubectl apply -f -
+curl https://raw.githubusercontent.com/redhatgov/operator-catalog/release/default/catalog_source.yml | kubectl apply -f -
+```
+
+If you want to add the development version of this catalog index to your OLM-enabled cluster, you could use kustomize like the following:
+
+```shell
+kustomize build github.com/redhatgov/operator-catalog?depth=1&ref=develop//default | kubectl apply -f -
 ```
 
 ### Contributing
@@ -25,11 +31,11 @@ If you have an operator you would like included in the catalog index, the steps 
     git checkout -b add_gitea
     ```
 
-1. Edit operate.conf to add your bundle image. If you track the latest tag, ensure you're updating that tag regularly so that when the index is rebuilt it pulls in your changes. If you prefer to pin versions, prepare to maintain your fork of this repo. **NOTE**: If your bundle, operator, or application images aren't maintained, they will probably be cut.
-1. Commit the operate.conf changes to add your bundle to your local branch in its own commit with something like:
+1. Edit operator-index.yml to add your bundle image. If you track the latest tag, ensure you're updating that tag regularly so that when the index is rebuilt it pulls in your changes. If you prefer to pin versions, prepare to maintain your fork of this repo. **NOTE**: If your bundle, operator, or application images aren't maintained, they will probably be cut.
+1. Commit the operator-index.yml changes to add your bundle to your local branch in its own commit with something like:
 
     ```shell
-    git add operate.conf
+    git add operator-index.yml
     git commit -m 'Added my Gitea operator to the index.'
     ```
 
@@ -51,8 +57,8 @@ This is the current expectation of release flow:
 - Pinning to a version tag for a deployment into a cluster that we can babysit (workshops, etc.) is not a bad idea, but we should expect to be able to track `latest` and only pin to a version tag if necessary.
 - No `$VERSION` or `latest` tags should be applied to images built from the `develop` branch. Travis is configured to push anything from the `develop` branch to the `$VERSION-dev` and `develop` tags on Quay.
 - Bundles get added in `develop` and the operators they install should be tested on an OpenShift cluster, manually for the time being, from the `develop` tag on Quay.
-- When the decision is made to release an update to the index, the version should be set appropriately in `operate.conf`:
-    1. Edit operate.conf to update the version of the index. In general, we should follow the [semantic versioning standard](https://semver.org/) by implementing the following conventions:
+- When the decision is made to release an update to the index, the version should be set appropriately in `operator-index.yml`:
+    1. Edit operator-index.yml to update the version of the index. In general, we should follow the [semantic versioning standard](https://semver.org/) by implementing the following conventions:
         1. If we remove a bundle from the index, we should increase the major version, as this is a breaking change.
         1. If we add a bundle to the index, we should increase the minor version, as this is a backwards-compatible change.
         1. If we update a bundle's tracking tag, or perform some other small bugfix, we should increase the patch version, as this is likely a minor bugfix/enhancement. If an operator has a pinned version change that breaks its own API (for example, moving from major version `1` to `2`), we should consider making a major release ourselves.
