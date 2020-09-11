@@ -7,13 +7,13 @@ install:
 - pip3 install -r requirements.txt
 script:
 # Don't even accidentally build a copy without appending -dev
-- ./operator-index.py build --tag-extension dev
+- ./operator-index.py -vvvv build --tag-extension dev
 deploy:
 - provider: script
-  script: docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io && ./operator-index.py push --tag-extension dev --extra-tag develop
+  script: docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io && ./operator-index.py -vvvv push --tag-extension dev --extra-tag develop
   on:
     branch: develop
 - provider: script
-  script: docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io && ./operator-index.py push --extra-tag latest --build
+  script: docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io && ./operator-index.py -vvvv push --extra-tag latest --build
   on:
     branch: release
