@@ -300,7 +300,7 @@ def do_build(verbose, tag_extension, opm_version):
     settings = load_settings()
 
     build_cmd = config["opm_path"] + settings.generate_command_line()
-    if tag_extension:
+    if tag_extension is not None:
         build_cmd += "-{}".format(tag_extension)
 
     for line in shell(build_cmd):
@@ -336,7 +336,7 @@ def push(ctx, verbose, tag_extension, extra_tag, build):
         runtime + " images --format '{{.Repository}}:{{.Tag}}'"
     )]
 
-    if tag_extension:
+    if tag_extension is not None:
         # Look for the tag w/ extension in the existing image list
         for line in images:
             if line == built_tag + "-" + tag_extension:
