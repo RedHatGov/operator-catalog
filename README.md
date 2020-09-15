@@ -9,7 +9,7 @@ This repository exists to serve as the source of truth for the contents of the R
 In short, you don't use this repository. Travis does. If you want to add this catalog index to your OLM-enabled cluster, you could install the catalog source using the following:
 
 ```shell
-curl https://raw.githubusercontent.com/redhatgov/operator-catalog/release/default/catalog_source.yml | kubectl apply -f -
+curl https://raw.githubusercontent.com/redhatgov/operator-catalog/main/default/catalog_source.yml | kubectl apply -f -
 ```
 
 If you want to add the development version of this catalog index to your OLM-enabled cluster, you could use kustomize like the following:
@@ -64,9 +64,9 @@ This is the current expectation of release flow:
         1. If we update a bundle's tracking tag, or perform some other small bugfix, we should increase the patch version, as this is likely a minor bugfix/enhancement. If an operator has a pinned version change that breaks its own API (for example, moving from major version `1` to `2`), we should consider making a major release ourselves.
     1. Commit the version bump to a commit on the `develop` branch.
     1. Perform a final test from the `develop` tag on Quay.
-    1. Open a Pull Request from the `develop` branch to the `release` branch that includes the list of changes and a description of the testing performed.
-- After a review of the PR against `release`, if it is merged, the `release` branch should be tagged with a _signed_ git tag marking the version number. This provides an easy way to correlate release tags on Quay with GitHub releases.
-- Travis will automatically push a new `latest` and `$VERSION` tag to Quay from the `release` branch.
+    1. Open a Pull Request from the `develop` branch to the `main` branch that includes the list of changes and a description of the testing performed.
+- After a review of the PR against `main`, if it is merged, the `main` branch should be tagged with a _signed_ git tag marking the version number. This provides an easy way to correlate image tags on Quay with GitHub releases.
+- Travis will automatically push a new `latest` and `$VERSION` tag to Quay from the `main` branch.
 
 ## Contributors
 
