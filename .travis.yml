@@ -16,4 +16,4 @@ deploy:
 - provider: script
   script: docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io && ./operator-index.py push -vvvv --extra-tag latest --build
   on:
-    branch: release
+    branch: main
