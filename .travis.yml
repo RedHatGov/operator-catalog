@@ -10,7 +10,7 @@ script:
 - ./operator-index.py build -vvvv --tag-extension dev
 deploy:
 - provider: script
-  script: docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io && ./operator-index.py push -vvvv --tag-extension dev --extra-tag develop
+  script: docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io && ./operator-index.py push -vvvv --tag-extension dev --extra-tag develop && ./operator-index.py push -vvvv --testing
   on:
     branch: develop
 - provider: script

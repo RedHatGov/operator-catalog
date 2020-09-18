@@ -288,7 +288,9 @@ def main(verbose):
 @tag_extension_opt
 @click.option("-o", "--opm-version", default="latest",
               help="The version of OPM to use to build the index.")
-def do_build(verbose, tag_extension, opm_version):
+@click.option("--develop", is_flag=True,
+              help="Convert all bundled operators to tag 'develop'")
+def do_build(verbose, tag_extension, opm_version, develop):
     """
     Builds the image locally
     """
@@ -298,6 +300,9 @@ def do_build(verbose, tag_extension, opm_version):
     install_opm(opm_version)
 
     settings = load_settings()
+    if develop:
+        for bundle in settings.bundles:
+            bundle.tag = "develop"
 
     build_cmd = config["opm_path"] + settings.generate_command_line()
     if tag_extension is not None:
@@ -315,8 +320,11 @@ def do_build(verbose, tag_extension, opm_version):
 @click.option("--build/--no-build", default=True,
               help=("Whether to build the images if they don't exist "
                     "(default: build)."))
+@click.option("--testing", is_flag=True,
+              help=("If building, convert all bundles to the 'develop' tag "
+                    "and push an index tag named 'testing' instead."))
 @click.pass_context
-def push(ctx, verbose, tag_extension, extra_tag, build):
+def push(ctx, verbose, tag_extension, extra_tag, build, testing):
     """
     Pushes the image with the appropriate tags to the registry
     """
@@ -324,6 +332,8 @@ def push(ctx, verbose, tag_extension, extra_tag, build):
     runtime = OperatorIndexSettings._determine_runtime()
 
     settings = load_settings()
+    if testing:
+        settings.index.tag = "testing"
 
     # This is the full built tag, including repository, that we are trying to
     #   push. It may not have been built yet.
@@ -365,12 +375,16 @@ def push(ctx, verbose, tag_extension, extra_tag, build):
         # Build it if we should
         if build:  # the user wants us to build a new version
             logger.debug("Doing build")
+            if tag_extension is not None:  # then we will be adding it
+                # So we need to keep track of that extension
+                push_tag += "-{}".format(tag_extension)
+            # This actually performs the build
+            # NOTE: if testing we point all packaged bundle tags to 'develop'
             ctx.invoke(do_build, verbose=verbose,
                        tag_extension=tag_extension,
-                       opm_version="latest")
-            if tag_extension is not None:
-                built_tag += "-{}".format(tag_extension)
-        else:
+                       opm_version="latest",
+                       develop=testing)
+        else:  # the user doesn't want to build a new version and it's not here
             raise RuntimeError("Unable to find the appropriate image to push.")
     elif tag_extension and not push_tag.endswith("-{}".format(tag_extension)):
         # If we found it, but the tag doesn't match, retag it."
