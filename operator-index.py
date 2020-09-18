@@ -246,7 +246,7 @@ def install_opm(version: str = "latest") -> None:
         os.symlink(config["opm_path"] + "-" + version, config["opm_path"])
 
 
-def load_settings() -> dict:
+def load_settings() -> OperatorIndexSettings:
     logger.info("Importing operator-index.yml")
     settings = OperatorIndexSettings.load(file=os.path.join(
         os.path.dirname(__file__),
