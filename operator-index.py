@@ -288,9 +288,10 @@ def main(verbose):
 @tag_extension_opt
 @click.option("-o", "--opm-version", default="latest",
               help="The version of OPM to use to build the index.")
-@click.option("--develop", is_flag=True,
-              help="Convert all bundled operators to tag 'develop'")
-def do_build(verbose, tag_extension, opm_version, develop):
+@click.option("--testing", is_flag=True,
+              help=("Convert all bundled operators to the 'develop' tag "
+                    "and build an index tag named 'testing' instead."))
+def do_build(verbose, tag_extension, opm_version, testing):
     """
     Builds the image locally
     """
@@ -300,9 +301,10 @@ def do_build(verbose, tag_extension, opm_version, develop):
     install_opm(opm_version)
 
     settings = load_settings()
-    if develop:
+    if testing:
         for bundle in settings.bundles:
             bundle.tag = "develop"
+        settings.index.tag = "testing"
 
     build_cmd = config["opm_path"] + settings.generate_command_line()
     if tag_extension is not None:
@@ -380,10 +382,11 @@ def push(ctx, verbose, tag_extension, extra_tag, build, testing):
                 push_tag += "-{}".format(tag_extension)
             # This actually performs the build
             # NOTE: if testing we point all packaged bundle tags to 'develop'
+            #   and set the index tag to 'testing'
             ctx.invoke(do_build, verbose=verbose,
                        tag_extension=tag_extension,
                        opm_version="latest",
-                       develop=testing)
+                       testing=testing)
         else:  # the user doesn't want to build a new version and it's not here
             raise RuntimeError("Unable to find the appropriate image to push.")
     elif tag_extension and not push_tag.endswith("-{}".format(tag_extension)):
