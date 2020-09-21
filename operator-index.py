@@ -246,7 +246,7 @@ def install_opm(version: str = "latest") -> None:
         os.symlink(config["opm_path"] + "-" + version, config["opm_path"])
 
 
-def load_settings() -> dict:
+def load_settings() -> OperatorIndexSettings:
     logger.info("Importing operator-index.yml")
     settings = OperatorIndexSettings.load(file=os.path.join(
         os.path.dirname(__file__),
@@ -288,7 +288,10 @@ def main(verbose):
 @tag_extension_opt
 @click.option("-o", "--opm-version", default="latest",
               help="The version of OPM to use to build the index.")
-def do_build(verbose, tag_extension, opm_version):
+@click.option("--testing", is_flag=True,
+              help=("Convert all bundled operators to the 'develop' tag "
+                    "and build an index tag named 'testing' instead."))
+def do_build(verbose, tag_extension, opm_version, testing):
     """
     Builds the image locally
     """
@@ -298,6 +301,10 @@ def do_build(verbose, tag_extension, opm_version):
     install_opm(opm_version)
 
     settings = load_settings()
+    if testing:
+        for bundle in settings.bundles:
+            bundle.tag = "develop"
+        settings.index.tag = "testing"
 
     build_cmd = config["opm_path"] + settings.generate_command_line()
     if tag_extension is not None:
@@ -315,8 +322,11 @@ def do_build(verbose, tag_extension, opm_version):
 @click.option("--build/--no-build", default=True,
               help=("Whether to build the images if they don't exist "
                     "(default: build)."))
+@click.option("--testing", is_flag=True,
+              help=("If building, convert all bundles to the 'develop' tag "
+                    "and push an index tag named 'testing' instead."))
 @click.pass_context
-def push(ctx, verbose, tag_extension, extra_tag, build):
+def push(ctx, verbose, tag_extension, extra_tag, build, testing):
     """
     Pushes the image with the appropriate tags to the registry
     """
@@ -324,72 +334,93 @@ def push(ctx, verbose, tag_extension, extra_tag, build):
     runtime = OperatorIndexSettings._determine_runtime()
 
     settings = load_settings()
+    if testing:
+        settings.index.tag = "testing"
 
-    built_tag = "{}:{}".format(
+    # This is the full built tag, including repository, that we are trying to
+    #   push. It may not have been built yet.
+    push_tag = "{}:{}".format(
         settings.index.img,
         settings.index.tag
     )
-    logger.info("Configured tag: {}".format(built_tag))
+    logger.info("Pushing tag: {}".format(push_tag))
 
+    # Start off by saying we haven't found an image with this tag
     found_image = False
+    # Record a list of all images present in the runtime right now
     images = [line for line in shell(
         runtime + " images --format '{{.Repository}}:{{.Tag}}'"
     )]
 
     if tag_extension is not None:
         # Look for the tag w/ extension in the existing image list
-        for line in images:
-            if line == built_tag + "-" + tag_extension:
+        for tag in images:
+            if tag == push_tag + "-" + tag_extension:
                 logger.debug("Found tag extension: -{}".format(tag_extension))
-                built_tag += "-{}".format(tag_extension)
-                found_image = True
+                push_tag += "-{}".format(tag_extension)
+                found_image = True  # we found the exact extended tag
                 break
 
     if not found_image:
-        # Look for the unextended tag in the existing image list
-        for line in images:
-            if line == built_tag:
+        # Look for the unextended tag in the existing image list because
+        #   either no tag extension was specified, or we didn't find the
+        #   extended tag in the list on this runtime
+        for tag in images:
+            if tag == push_tag:
                 logger.debug("Found unextended tag")
-                found_image = True
+                found_image = True  # we found this image, without extension
                 break
 
     if not found_image:
+        # If we haven't found the image at all, we should maybe build it
         logger.info("Unable to find image")
         # Build it if we should
-        if build:
+        if build:  # the user wants us to build a new version
             logger.debug("Doing build")
+            if tag_extension is not None:  # then we will be adding it
+                # So we need to keep track of that extension
+                push_tag += "-{}".format(tag_extension)
+            # This actually performs the build
+            # NOTE: if testing we point all packaged bundle tags to 'develop'
+            #   and set the index tag to 'testing'
             ctx.invoke(do_build, verbose=verbose,
                        tag_extension=tag_extension,
-                       opm_version="latest")
-            if tag_extension is not None:
-                built_tag += "-{}".format(tag_extension)
-        else:
+                       opm_version="latest",
+                       testing=testing)
+        else:  # the user doesn't want to build a new version and it's not here
             raise RuntimeError("Unable to find the appropriate image to push.")
-    elif tag_extension and not built_tag.endswith("-{}".format(tag_extension)):
+    elif tag_extension and not push_tag.endswith("-{}".format(tag_extension)):
         # If we found it, but the tag doesn't match, retag it."
         logger.info(
-            "Retagging {0} as {0}-{1}".format(built_tag, tag_extension)
+            "Retagging {0} as {0}-{1}".format(push_tag, tag_extension)
         )
         shell(
-            runtime + " tag " + built_tag + " " + built_tag +
+            runtime + " tag " + push_tag + " " + push_tag +
             "-{}".format(tag_extension)
         )
-        built_tag += "-{}".format(tag_extension)
+        # And make sure that we keep track of what we need to push
+        push_tag += "-{}".format(tag_extension)
 
+    # Build out all complete extra tags to push
     extra_tags = [
         "{}:{}".format(settings.index.img, tag) for tag in extra_tag
     ]
     if extra_tags:
         logger.info("Also tagging: {}".format(extra_tags))
 
+    # At this point push_tag is the full tag of an image built here that we
+    #   want to push, and extra tags are all the other tags we want to add
+    #   directly.
     tag_cmds = [
-        runtime + " tag " + built_tag + " " + tag for tag in extra_tags
+        runtime + " tag " + push_tag + " " + tag for tag in extra_tags
     ]
+    # This adds our extra tags
     for tag_cmd in tag_cmds:
         for line in shell(tag_cmd):
             print(line)
 
-    push_cmds = [runtime + " push " + tag for tag in extra_tags + [built_tag]]
+    push_cmds = [runtime + " push " + tag for tag in extra_tags + [push_tag]]
+    # This pushes our main tag (maybe with extensions) and our extra tags
     for push_cmd in push_cmds:
         for line in shell(push_cmd):
             print(line)
