@@ -225,7 +225,7 @@ def install_opm(version: str = "latest") -> None:
         version = str(latest_opm)
         logger.debug("Identified latest version as: {}".format(version))
 
-    if not os.path.exists(config["opm_path"] + "-" + str(latest_opm)):
+    if not os.path.exists(config["opm_path"] + "-" + version):
         logger.debug("Downloading {}".format(
             config["opm_url"] + version + "/linux-amd64-opm"
         ))
