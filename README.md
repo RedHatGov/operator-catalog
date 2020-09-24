@@ -76,3 +76,4 @@ This is a list of people who have contributed to code used in the operators inde
 - [Andrew Block](https://github.com/sabre1041)
 - [James Harmison](https://github.com/jharmison-redhat)
 - [Andy Krohg](https://github.com/andykrohg)
+- [Griffin College](https://github.com/griffincollege)
