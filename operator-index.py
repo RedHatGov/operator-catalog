@@ -271,6 +271,21 @@ def tag_extension_opt(func):
     )(func)
 
 
+def opm_version_opt(func):
+    return click.option(
+        "-o", "--opm-version", default="latest",
+        help="The version of OPM to use to build the index."
+    )(func)
+
+
+def testing_opt(func):
+    return click.option(
+        "--testing", is_flag=True,
+        help=("Convert all bundled operators to the 'develop' tag "
+              "and build an index tag named 'testing' instead.")
+    )(func)
+
+
 @click.group(invoke_without_command=True)
 @verbose_opt
 @click.version_option()
@@ -286,11 +301,8 @@ def main(verbose):
 @main.command(name="build")
 @verbose_opt
 @tag_extension_opt
-@click.option("-o", "--opm-version", default="latest",
-              help="The version of OPM to use to build the index.")
-@click.option("--testing", is_flag=True,
-              help=("Convert all bundled operators to the 'develop' tag "
-                    "and build an index tag named 'testing' instead."))
+@opm_version_opt
+@testing_opt
 def do_build(verbose, tag_extension, opm_version, testing):
     """
     Builds the image locally
@@ -322,11 +334,10 @@ def do_build(verbose, tag_extension, opm_version, testing):
 @click.option("--build/--no-build", default=True,
               help=("Whether to build the images if they don't exist "
                     "(default: build)."))
-@click.option("--testing", is_flag=True,
-              help=("If building, convert all bundles to the 'develop' tag "
-                    "and push an index tag named 'testing' instead."))
+@opm_version_opt
+@testing_opt
 @click.pass_context
-def push(ctx, verbose, tag_extension, extra_tag, build, testing):
+def push(ctx, verbose, tag_extension, extra_tag, build, opm_version, testing):
     """
     Pushes the image with the appropriate tags to the registry
     """
@@ -385,7 +396,7 @@ def push(ctx, verbose, tag_extension, extra_tag, build, testing):
             #   and set the index tag to 'testing'
             ctx.invoke(do_build, verbose=verbose,
                        tag_extension=tag_extension,
-                       opm_version="latest",
+                       opm_version=opm_version,
                        testing=testing)
         else:  # the user doesn't want to build a new version and it's not here
             raise RuntimeError("Unable to find the appropriate image to push.")
