@@ -3,17 +3,20 @@ dist: bionic
 language: python
 services:
 - docker
+env:
+  global:
+    - OPM_VERSION=1.14.0
 install:
 - pip3 install -r requirements.txt
 script:
 # Don't even accidentally build a copy without appending -dev
-- ./operator-index.py build -vvvv --tag-extension dev
+- ./operator-index.py build -vvvv --tag-extension dev --opm-version $OPM_VERSION
 deploy:
 - provider: script
-  script: docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io && ./operator-index.py push -vvvv --tag-extension dev --extra-tag develop && ./operator-index.py push -vvvv --testing
+  script: docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io && ./operator-index.py push -vvvv --tag-extension dev --extra-tag develop --opm-version $OPM_VERSION && ./operator-index.py push -vvvv --testing --opm-version $OPM_VERSION
   on:
     branch: develop
 - provider: script
-  script: docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io && ./operator-index.py push -vvvv --extra-tag latest --build
+  script: docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io && ./operator-index.py push -vvvv --extra-tag latest --build --opm-version $OPM_VERSION
   on:
     branch: main
