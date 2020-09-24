@@ -302,8 +302,18 @@ def do_build(verbose, tag_extension, opm_version, testing):
 
     settings = load_settings()
     if testing:
+        runtime = OperatorIndexSettings._determine_runtime()
         for bundle in settings.bundles:
-            bundle.tag = "develop"
+            develop = True  # Default to assuming we can use a develop tag
+            for line in shell("{} pull {}:develop".format(runtime, bundle.img),
+                              fail=False):  # but actually pull the tags
+                if "Error" in line:  # and abort if error
+                    logger.info(("Unable to use {0}:develop, defaulting to "
+                                 "{0}:{1}").format(bundle.img, bundle.tag))
+                    develop = False
+                    break
+            if develop:
+                bundle.tag = "develop"
         settings.index.tag = "testing"
 
     build_cmd = config["opm_path"] + settings.generate_command_line()
