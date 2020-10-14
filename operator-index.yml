@@ -16,6 +16,9 @@ operator_bundles:
 - name: selenium-grid-operator
   img: quay.io/redhatgov/selenium-grid-operator-bundle
   tag: 0.0.1
+- name: tssc-operator
+  img: quay.io/redhatgov/tssc-operator-bundle
+  tag: 0.0.1
 
 # - name: your-operator
 #   bundle_img: quay.io/your-project/your-operator-bundle
