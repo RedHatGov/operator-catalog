@@ -19,7 +19,7 @@ jobs:
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Build Index
-      run: ./operator-index.py build -vvvv --tag-extension dev --opm-version $OPM_VERSION
+      run: mkdir -p $HOME/.local/bin && ./operator-index.py build -vvvv --tag-extension dev --opm-version $OPM_VERSION
     - name: Login to quay.io
       uses: actions-hub/docker/login@master
       env:
