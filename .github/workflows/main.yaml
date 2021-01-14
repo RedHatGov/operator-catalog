@@ -20,18 +20,14 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Build Index
       run: mkdir -p $HOME/.local/bin && ./operator-index.py build -vvvv --tag-extension dev --opm-version $OPM_VERSION
-    - name: Login to quay.io
-      uses: actions-hub/docker/login@master
-      env:
-        DOCKER_USERNAME: ${{ secrets.QUAY_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
-        DOCKER_REGISTRY_URL: quay.io
     - name: Push to dev
       if: github.ref == 'refs/heads/develop'
       run: |
+        docker login -u "${{ secrets.QUAY_USERNAME }}" -p "${{ secrets.QUAY_PASSWORD }}" quay.io && \
         ./operator-index.py push -vvvv --tag-extension dev --extra-tag develop --opm-version $OPM_VERSION && \
         ./operator-index.py push -vvvv --testing --opm-version $OPM_VERSION
     - name: Push to latest
       if: github.ref == 'refs/heads/main'
       run: |
+        docker login -u "${{ secrets.QUAY_USERNAME }}" -p "${{ secrets.QUAY_PASSWORD }}" quay.io && \
         ./operator-index.py push -vvvv --extra-tag latest --build --opm-version $OPM_VERSION
