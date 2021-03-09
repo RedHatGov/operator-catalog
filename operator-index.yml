@@ -18,7 +18,7 @@ operator_bundles:
   tag: 0.0.1
 - name: tssc-operator
   img: quay.io/redhatgov/tssc-operator-bundle
-  tag: 0.2.3
+  tag: 0.2.4
 - name: devsecops-operator
   img: quay.io/redhatgov/devsecops-operator-bundle
   tag: 0.0.1
