@@ -6,7 +6,7 @@ operator_bundles:
   tag: 0.0.3
 - name: gitea-operator
   img: quay.io/redhatgov/gitea-operator-bundle
-  tag: 0.0.5
+  tag: 0.0.7
 - name: nexus-operator
   img: quay.io/redhatgov/nexus-operator-bundle
   tag: 0.0.9
@@ -30,7 +30,7 @@ operator_bundles:
 # This is information on the catalog index image that will be built
 catalog_index:
   img: quay.io/redhatgov/operator-catalog
-  tag: 1.5.16
+  tag: 1.5.17
 # If we remove a bundle from the index, we should increase the major version, as
 #   this is a breaking change.
 # If we add a bundle to the index, we should increase the minor version, as this
